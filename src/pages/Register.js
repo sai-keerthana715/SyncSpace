@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField, Button, Container, Typography } from '@mui/material';
+import { TextField, Button, Container, Typography, Box, Paper } from '@mui/material';
 import axios from 'axios';
 
 export default function Register() {
@@ -18,12 +18,101 @@ export default function Register() {
   };
 
   return (
-    <Container maxWidth='sm' style={{ paddingTop: 40 }}>
-      <Typography variant='h4' gutterBottom>Create an Account</Typography>
-      <TextField label='Name' fullWidth margin='normal' value={name} onChange={e=>setName(e.target.value)} />
-      <TextField label='Email' fullWidth margin='normal' value={email} onChange={e=>setEmail(e.target.value)} />
-      <TextField label='Password' type='password' fullWidth margin='normal' value={password} onChange={e=>setPassword(e.target.value)} />
-      <Button variant='contained' onClick={handleRegister}>Register</Button>
-    </Container>
+    <Box
+      sx={{
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #6366F1, #3B82F6)',
+      }}
+    >
+      <Paper
+        elevation={8}
+        sx={{
+          p: 5,
+          borderRadius: 4,
+          width: 420,
+          textAlign: 'center',
+          backgroundColor: '#ffffffee',
+          backdropFilter: 'blur(6px)',
+        }}
+      >
+        <Container maxWidth="sm" sx={{ paddingTop: 2 }}>
+          <Typography
+            variant="h4"
+            gutterBottom
+            sx={{
+              background: 'linear-gradient(90deg, #3B82F6, #6366F1)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 'bold',
+            }}
+          >
+            Create an Account
+          </Typography>
+
+          <TextField
+            label="Name"
+            fullWidth
+            margin="normal"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                '&:hover fieldset': { borderColor: '#3B82F6' },
+              },
+            }}
+          />
+
+          <TextField
+            label="Email"
+            fullWidth
+            margin="normal"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                '&:hover fieldset': { borderColor: '#3B82F6' },
+              },
+            }}
+          />
+
+          <TextField
+            label="Password"
+            type="password"
+            fullWidth
+            margin="normal"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                '&:hover fieldset': { borderColor: '#3B82F6' },
+              },
+            }}
+          />
+
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={handleRegister}
+            sx={{
+              mt: 3,
+              py: 1.2,
+              fontSize: '16px',
+              borderRadius: 2,
+              fontWeight: 600,
+              background: 'linear-gradient(90deg, #3B82F6, #2563EB)',
+              '&:hover': { background: '#1E3A8A' },
+            }}
+          >
+            Register
+          </Button>
+        </Container>
+      </Paper>
+    </Box>
   );
 }

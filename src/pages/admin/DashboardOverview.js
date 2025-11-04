@@ -88,49 +88,88 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import io from "socket.io-client";
 import { Card, CardContent, Typography } from '@mui/material';
 
 export default function DashboardOverview() {
   const [stats, setStats] = useState({ users: 0, workspaces: 0, tasks: 0 });
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const token = localStorage.getItem('token');
-        const members = await axios.get('http://localhost:5000/api/admin/members', { headers: { Authorization: 'Bearer ' + token } });
-        const workspaces = await axios.get('http://localhost:5000/api/admin/workspaces', { headers: { Authorization: 'Bearer ' + token } });
-        // tasks count could be fetched from a future endpoint, here we approximate 0
-        setStats({ users: members.data.length, workspaces: workspaces.data.length, tasks: 0 });
-      } catch (err) {
-        console.error(err);
-      }
+  // 🔹 Load initial stats from the backend
+  async function loadStats() {
+    try {
+      const token = localStorage.getItem('token');
+      const [membersRes, workspacesRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/admin/members', {
+          headers: { Authorization: 'Bearer ' + token }
+        }),
+        axios.get('http://localhost:5000/api/admin/workspaces', {
+          headers: { Authorization: 'Bearer ' + token }
+        })
+      ]);
+
+      // Count total number of tasks across all workspaces
+      let totalTasks = 0;
+      workspacesRes.data.forEach(ws => {
+        if (ws.tasks && ws.tasks.length > 0) totalTasks += ws.tasks.length;
+      });
+
+      setStats({
+        users: membersRes.data.length,
+        workspaces: workspacesRes.data.length,
+        tasks: totalTasks
+      });
+    } catch (err) {
+      console.error("❌ Error loading dashboard stats:", err);
     }
-    load();
+  }
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  // 🔹 Socket.io real-time updates
+  useEffect(() => {
+    const socket = io("http://localhost:5000");
+    const admin = JSON.parse(localStorage.getItem("user"));
+    if (!admin?._id) return;
+
+    socket.emit("register", admin._id);
+
+    // When a member updates a task status → refresh stats
+    socket.on("task_count_update", ({ workspaceId, status }) => {
+      console.log("📦 Task status updated in workspace:", workspaceId, status);
+      loadStats(); // Recalculate total task counts
+    });
+
+    return () => socket.disconnect();
   }, []);
 
   return (
     <div className="p-6">
       <h3 className="text-2xl font-semibold mb-4">Overview</h3>
       <div className="grid grid-cols-3 gap-4">
-        <Card>
+        <Card className="shadow-lg border-l-4 border-blue-500">
           <CardContent>
-            <Typography variant="subtitle2">Members</Typography>
-            <Typography variant="h4">{stats.users}</Typography>
+            <Typography variant="subtitle2" color="text.secondary">Members</Typography>
+            <Typography variant="h4" className="text-blue-600">{stats.users}</Typography>
           </CardContent>
         </Card>
-        <Card>
+
+        <Card className="shadow-lg border-l-4 border-green-500">
           <CardContent>
-            <Typography variant="subtitle2">Workspaces</Typography>
-            <Typography variant="h4">{stats.workspaces}</Typography>
+            <Typography variant="subtitle2" color="text.secondary">Workspaces</Typography>
+            <Typography variant="h4" className="text-green-600">{stats.workspaces}</Typography>
           </CardContent>
         </Card>
-        <Card>
+
+        <Card className="shadow-lg border-l-4 border-yellow-500">
           <CardContent>
-            <Typography variant="subtitle2">Tasks</Typography>
-            <Typography variant="h4">{stats.tasks}</Typography>
+            <Typography variant="subtitle2" color="text.secondary">Tasks</Typography>
+            <Typography variant="h4" className="text-yellow-600">{stats.tasks}</Typography>
           </CardContent>
         </Card>
       </div>
     </div>
   );
 }
+
